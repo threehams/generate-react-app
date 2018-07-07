@@ -3,7 +3,8 @@
     "allowSyntheticDefaultImports": true,
     "lib": ["esnext"],
     "strict": true,
-    "jsx": "react"
+    "jsx": "react",
+    "suppressImplicitAnyIndexErrors": true
   },
   "typeAcquisition": {
     "enable": true
