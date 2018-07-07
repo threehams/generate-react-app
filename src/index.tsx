@@ -1,4 +1,3 @@
-import React from "react";
 import faker from "faker";
 import seedrandom from "seedrandom";
 
@@ -26,41 +25,58 @@ const DEFAULTS = {
   variation: 50, // %difference between split point size
 };
 
-const ComponentA = ({ children }) => {
-  return <div>{children}</div>;
+const range = (count: number) => {
+  return Array.from(Array(count).keys());
 };
 
-const ComponentB = ({ children }) => {
-  return <div>{children}</div>;
+const RESPONSE = {
+  name: faker.name.firstName(),
+  address: faker.address.streetAddress(),
+  phone: faker.phone.phoneNumber(),
+  scsi: faker.hacker.noun(),
+  active: faker.random.boolean(),
+  phrases: range(faker.random.number()).map(faker.hacker.phrase),
 };
 
-const ComponentC = ({ children }) => {
-  return <div>{children}</div>;
-};
-
-const components = [
-  { name: "ComponentA", template: "basic" },
-  { name: "ComponentB", template: "layout" },
-  { name: "ComponentC", template: "list" },
-];
-/* prettier-ignore */
 const appStructure = [
+  "Stateless",
+  {
+    name: "string",
+    address: "string",
+    phone: "string",
+    scsi: "string",
+    active: "boolean",
+    phrases: "string[]",
+  },
   [
-    "ComponentA",
-    {
-      name: "",
-      address: "",
-      phone: "",
-    },
     [
-      "ComponentB",
+      "Stateless",
+      {
+        name: "string",
+        address: "string",
+        phone: "string",
+        scsi: "string",
+        active: "boolean",
+        phrases: "string[]",
+      },
+      [
+        [
+          "Stateless",
+          {
+            name: "string",
+            address: "string",
+            phone: "string",
+          },
+        ],
+      ],
     ],
   ],
-  ["ComponentC"]
 ];
 
 const main = () => {
-  components.forEach(component => {});
+  appStructure.forEach(component => {
+    console.log(component);
+  });
 };
 
 main();
