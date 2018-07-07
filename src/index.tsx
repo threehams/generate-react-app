@@ -56,11 +56,22 @@ const RESPONSE = {
   phrases: range(faker.random.number()).map(faker.hacker.phrase),
 };
 
-const Stateless = ({ name, props, children }: Template) => {
+const Stateless = ({ name, props: ownProps, children }: Template) => {
+  // for simplicity: two props with the same name will have the same type
+  const mergeChildProps = (props, child) => {
+    if (child.children.length) {
+      return {
+        ...child.props,
+        ...child.children.reduce(mergeChildProps, props),
+      };
+    }
+    return { ...props, ...child.props };
+  };
+  const mergedProps = children.reduce(mergeChildProps, ownProps);
   const imports = children.map(child => {
     return `import {${child.name}} from "./${child.name}";\n`;
   });
-  const propTypes = Object.entries(props)
+  const propTypes = Object.entries(mergedProps)
     .map(([key, value]) => {
       return `${key}: ${value};`;
     })
@@ -73,12 +84,11 @@ const Stateless = ({ name, props, children }: Template) => {
       .join(" ");
     return `<${name} ${attrs} />`;
   });
-  const childProps = flatMap(children, child => Object.keys(child.props));
-  const internalChildren = Object.entries(omit(props, childProps))
+  const internalChildren = Object.entries(ownProps)
     .map(([name, type]) => propChildren[type](name))
     .join("\n");
 
-  const propKeys = Object.keys(props).join(", ");
+  const propKeys = Object.keys(mergedProps).join(", ");
   return `
 import React from "react";
 ${imports}
@@ -122,7 +132,6 @@ const parent: Template = {
   name: "Parent",
   template: "Stateless",
   props: {
-    ...child.props,
     scsi: "string",
     phrases: "string[]",
   },
@@ -134,7 +143,6 @@ const grandparent: Template = {
   template: "Stateless",
   props: {
     hacky: "string[]",
-    ...parent.props,
   },
   children: [parent],
 };
