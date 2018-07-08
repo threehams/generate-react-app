@@ -1,12 +1,9 @@
-import React from "react";
 import faker from "faker";
-import seedrandom from "seedrandom";
 import prettier from "prettier";
-import { flatMap, omit } from "lodash";
+import { fakeProps, getType } from "./fakes/props";
+import { range } from "lodash";
 
-const seed = 5348312;
-faker.seed(seed);
-const random = seedrandom(seed.toString());
+faker.seed(5348312);
 
 const DEFAULTS = {
   chaos: 0, // % chance of non-syntax runtime errors
@@ -31,12 +28,6 @@ const DEFAULTS = {
   variation: 50, // % difference between scene size
 };
 
-const range = (count: number) => {
-  return Array.from(Array(count).keys());
-};
-
-type PropType = "string" | "";
-
 type PropHandlers = {
   [key: string]: (name: string) => string;
 };
@@ -46,14 +37,6 @@ const propChildren: PropHandlers = {
   "string[]": name => {
     return `<ul>{${name}.map(item => <li>{item}</li>)}</ul>`;
   },
-};
-
-const RESPONSE = {
-  name: faker.name.firstName(),
-  address: faker.address.streetAddress(),
-  phone: faker.phone.phoneNumber(),
-  scsi: faker.hacker.noun(),
-  phrases: range(faker.random.number()).map(faker.hacker.phrase),
 };
 
 const Stateless = ({ name, props: ownProps, children }: Template) => {
@@ -147,10 +130,21 @@ const grandparent: Template = {
   children: [parent],
 };
 
-const appStructure: Template[] = [grandparent, parent, child];
+// const appStructure: Template[] = [grandparent, parent, child];
+
+const appStructure = ({ propCount, componentCount }) => {
+  const props = faker.helpers.shuffle(fakeProps).slice(0, propCount - 1);
+  const components = faker.helpers
+    .shuffle(componentNames)
+    .slice(0, componentCount - 1);
+  return faker.helpers
+    .shuffle(fakeProps)
+    .slice(0, propCount - 1)
+    .map(prop => {});
+};
 
 const main = () => {
-  appStructure.forEach(component => {
+  appStructure({ propCount: 8, componentCount: 3 }).forEach(component => {
     const code = templates[component.template](component);
     console.log(prettier.format(code, { parser: "typescript" }));
   });
