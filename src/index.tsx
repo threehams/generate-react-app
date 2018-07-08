@@ -1,9 +1,12 @@
-import faker from "faker";
+import faker from "faker/locale/en";
 import prettier from "prettier";
-import { fakeProps, getType } from "./fakes/props";
+import { getComponentNames, fakeProps, getTypescriptType } from "./fakes/props";
 import { range } from "lodash";
+import pluralize from "pluralize";
 
-faker.seed(5348312);
+// faker.seed(5348312);
+
+const componentNames = getComponentNames();
 
 const DEFAULTS = {
   chaos: 0, // % chance of non-syntax runtime errors
@@ -33,10 +36,11 @@ type PropHandlers = {
 };
 
 const propChildren: PropHandlers = {
-  string: name => `<h4>${name}: {${name}}</h4>`,
-  "string[]": name => {
-    return `<ul>{${name}.map(item => <li>{item}</li>)}</ul>`;
-  },
+  text: name => `<h4>${name}: {${name}}</h4>`,
+  date: name => `<div>{${name}.toLocaleDateString()}</div>`,
+  image: name => `<img src={${name}} alt="${name}" />`,
+  email: name => `<a href={"mailto:" + ${name}}>{${name}}</a>`,
+  url: name => `<a href={${name}}>{${name}}</a>`,
 };
 
 const Stateless = ({ name, props: ownProps, children }: Template) => {
@@ -51,24 +55,34 @@ const Stateless = ({ name, props: ownProps, children }: Template) => {
     return { ...props, ...child.props };
   };
   const mergedProps = children.reduce(mergeChildProps, ownProps);
-  const imports = children.map(child => {
-    return `import {${child.name}} from "./${child.name}";\n`;
-  });
-  const propTypes = Object.entries(mergedProps)
-    .map(([key, value]) => {
-      return `${key}: ${value};`;
+  const imports = children
+    .map(child => {
+      return `import {${child.name}} from "./${child.name}";`;
     })
     .join("\n");
-  const childComponents = children.map(({ name, props }) => {
-    const attrs = Object.keys(props)
-      .map(prop => {
-        return `${prop}={${prop}}`;
-      })
-      .join(" ");
-    return `<${name} ${attrs} />`;
-  });
+  const propTypes = Object.entries(mergedProps)
+    .map(([key, type]) => {
+      return `${key}: ${getTypescriptType(type)};`;
+    })
+    .join("\n");
+  const childComponents = children
+    .map(({ name, props }) => {
+      const attrs = Object.keys(props)
+        .map(prop => {
+          return `${prop}={${prop}}`;
+        })
+        .join(" ");
+      return `<${name} ${attrs} />`;
+    })
+    .join("\n");
   const internalChildren = Object.entries(ownProps)
-    .map(([name, type]) => propChildren[type](name))
+    .map(([name, type]) => {
+      const handler = propChildren[type];
+      if (!handler) {
+        throw new Error(`No handler found for type: "${type}"`);
+      }
+      return handler(name);
+    })
     .join("\n");
 
   const propKeys = Object.keys(mergedProps).join(", ");
@@ -100,53 +114,52 @@ interface Template {
   children: Template[];
 }
 
-const child: Template = {
-  name: "Child",
-  template: "Stateless",
-  props: {
-    name: "string",
-    address: "string",
-    phone: "string",
-  },
-  children: [],
+const sample = (array: any[], count: number) => {
+  return faker.helpers.shuffle(array).slice(0, count - 1);
 };
 
-const parent: Template = {
-  name: "Parent",
-  template: "Stateless",
-  props: {
-    scsi: "string",
-    phrases: "string[]",
+type SceneStructure = (
+  options: {
+    propCount: number;
+    componentCount: number;
   },
-  children: [child],
-};
+) => Template[];
 
-const grandparent: Template = {
-  name: "Grandparent",
-  template: "Stateless",
-  props: {
-    hacky: "string[]",
-  },
-  children: [parent],
-};
+const sceneStructure: SceneStructure = ({ propCount, componentCount }) => {
+  const propsSample = sample(fakeProps, propCount);
+  const names = sample(componentNames, componentCount);
+  return names.reduce((components, name) => {
+    const numChildren = faker.random.number({
+      min: 0,
+      max: Math.max(componentCount, components.length),
+    });
+    const children = sample(components, numChildren);
+    const props = sample(
+      propsSample,
+      faker.random.number({
+        min: 2,
+        max: propCount - 2,
+      }),
+    ).reduce((result, prop) => {
+      result[prop.name] = prop.type;
+      return result;
+    }, {});
 
-// const appStructure: Template[] = [grandparent, parent, child];
-
-const appStructure = ({ propCount, componentCount }) => {
-  const props = faker.helpers.shuffle(fakeProps).slice(0, propCount - 1);
-  const components = faker.helpers
-    .shuffle(componentNames)
-    .slice(0, componentCount - 1);
-  return faker.helpers
-    .shuffle(fakeProps)
-    .slice(0, propCount - 1)
-    .map(prop => {});
+    components.push({
+      name,
+      template: "Stateless",
+      props,
+      children,
+    });
+    return components;
+  }, []);
 };
 
 const main = () => {
-  appStructure({ propCount: 8, componentCount: 3 }).forEach(component => {
+  sceneStructure({ propCount: 20, componentCount: 13 }).forEach(component => {
     const code = templates[component.template](component);
     console.log(prettier.format(code, { parser: "typescript" }));
+    console.log("-----------");
   });
 };
 
