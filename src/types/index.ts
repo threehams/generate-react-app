@@ -14,5 +14,6 @@ export interface Template {
   template: string;
   props: Props;
   children: Template[];
-  scene: boolean;
+  importPath: string;
+  // state: Props;
 }

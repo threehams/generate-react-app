@@ -83,14 +83,15 @@ const createSceneStructure: SceneStructure = ({ propsSample, names }) => {
       result[prop.name] = prop.type;
       return result;
     }, {});
-    const scene = index === names.length - 1;
+    const importPath = index === names.length - 1 ? "../components/" : "./";
 
     components.push({
       name,
       template: "stateless",
       props,
       children,
-      scene,
+      importPath,
+      // state,
     });
     return components;
   }, []);

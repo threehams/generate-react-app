@@ -18,7 +18,7 @@ export const stateless = ({
   name,
   props: ownProps,
   children,
-  scene,
+  importPath,
 }: Template) => {
   // for simplicity: two props with the same name will have the same type
   const mergeChildProps = (props: Props, child: Template): Props => {
@@ -33,7 +33,6 @@ export const stateless = ({
   const mergedProps = children.reduce(mergeChildProps, ownProps);
   const imports = children
     .map(child => {
-      const importPath = scene ? "../components/" : "./";
       return `import {${child.name}} from "${importPath}${child.name}";`;
     })
     .join("\n");
