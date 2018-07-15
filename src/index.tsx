@@ -2,21 +2,22 @@ require("source-map-support").install();
 
 import faker from "faker/locale/en";
 import prettier from "prettier";
-import pluralize from "pluralize";
 import mkdirp from "mkdirp";
 import path from "path";
 import fs from "fs";
 import appRootPath from "app-root-path";
+import { fixtures, stateless } from "./templates";
 
-import {
-  getComponentNames,
-  fakeProps,
-  getTypescriptType,
-  Prop,
-  PropType,
-} from "./fakes/props";
+import { getComponentNames, fakeProps } from "./fakes/props";
 
-// faker.seed(5348312);
+import { Prop, Template } from "./types";
+
+const basePath = path.join(appRootPath.toString(), "sample");
+const componentsPath = path.join(basePath, "components");
+const scenesPath = path.join(basePath, "scenes");
+const fixturesPath = path.join(basePath, "fixtures");
+
+faker.seed(5348312);
 
 const componentNames = getComponentNames();
 
@@ -49,112 +50,9 @@ const DEFAULTS = {
   // variation: 50, // % difference between scene size
 };
 
-type PropHandlers = {
-  [key: string]: (name: string) => string;
-};
+const templates = { stateless, fixtures };
 
-const propChildren: PropHandlers = {
-  text: name => `<h4>${name}: {${name}}</h4>`,
-  date: name => `<div>${name}: {${name}}</div>`,
-  image: name => `<img src={${name}} alt="${name}" />`,
-  email: name => `<a href={"mailto:" + ${name}}>{${name}}</a>`,
-  url: name => `<a href={${name}}>{${name}}</a>`,
-};
-
-export const Stateless = ({
-  name,
-  props: ownProps,
-  children,
-  scene,
-}: Template) => {
-  // for simplicity: two props with the same name will have the same type
-  const mergeChildProps = (props: Props, child: Template): Props => {
-    if (child.children.length) {
-      return {
-        ...child.props,
-        ...child.children.reduce(mergeChildProps, props),
-      };
-    }
-    return { ...props, ...child.props };
-  };
-  const mergedProps = children.reduce(mergeChildProps, ownProps);
-  const imports = children
-    .map(child => {
-      const importPath = scene ? "../components/" : "./";
-      return `import {${child.name}} from "${importPath}${child.name}";`;
-    })
-    .join("\n");
-  const propTypes = Object.entries(mergedProps)
-    .map(([key, type]) => {
-      return `${key}: ${getTypescriptType(type)};`;
-    })
-    .join("\n");
-  const childComponents = children
-    .map(child => {
-      const combinedProps = [child].reduce(mergeChildProps, child.props);
-      const attrs = Object.keys(combinedProps)
-        .map(prop => {
-          return `${prop}={${prop}}`;
-        })
-        .join(" ");
-      return `<${child.name} ${attrs} />`;
-    })
-    .join("\n");
-  const internalChildren = Object.entries(ownProps)
-    .map(([name, type]) => {
-      const handler = propChildren[type];
-      if (!handler) {
-        throw new Error(`No handler found for type: "${type}"`);
-      }
-      return handler(name);
-    })
-    .join("\n");
-
-  const propKeys = Object.keys(mergedProps).join(", ");
-  return `
-import React from "react";
-${imports}
-
-interface Props {
-  ${propTypes}
-}
-
-export const ${name}: React.SFC<Props> = ({${propKeys}}) => {
-  return (
-    <div>
-      ${internalChildren}
-      ${childComponents}
-    </div>
-  );
-};
-`;
-};
-
-const Fixtures = ({ props }: { props: Prop[] }) => {
-  const propValues = props
-    .map(prop => {
-      return `${prop.name}: ${JSON.stringify(prop.func())}`;
-    })
-    .join(",\n");
-  return `
-export const fixtures = {
-  ${propValues}
-}
-`;
-};
-
-const templates = { Stateless, Fixtures };
-
-type Props = { [key: string]: PropType };
-
-interface Template {
-  name: string;
-  template: string;
-  props: Props;
-  children: Template[];
-  scene: boolean;
-}
-
+// returns a tuple of [items, remainingItems] for reuse
 const sample = <T extends any>(array: T[], count: number): [T[], T[]] => {
   const shuffled = faker.helpers.shuffle(array);
   return [shuffled.slice(0, count), shuffled.slice(count, array.length - 1)];
@@ -169,7 +67,6 @@ type SceneStructure = (
 
 const createSceneStructure: SceneStructure = ({ propsSample, names }) => {
   return names.reduce((components: Template[], name, index) => {
-    console.log(name);
     const numChildren = faker.random.number({
       min: 0,
       max: Math.max(names.length, components.length),
@@ -190,7 +87,7 @@ const createSceneStructure: SceneStructure = ({ propsSample, names }) => {
 
     components.push({
       name,
-      template: "Stateless",
+      template: "stateless",
       props,
       children,
       scene,
@@ -199,16 +96,16 @@ const createSceneStructure: SceneStructure = ({ propsSample, names }) => {
   }, []);
 };
 
-const main = () => {
-  const options = { ...DEFAULTS };
-
-  const basePath = path.join(appRootPath.toString(), "sample");
-  const componentsPath = path.join(basePath, "components");
-  const scenesPath = path.join(basePath, "scenes");
-  const fixturesPath = path.join(basePath, "fixtures");
+const createPaths = () => {
   mkdirp.sync(componentsPath);
   mkdirp.sync(scenesPath);
   mkdirp.sync(fixturesPath);
+};
+
+const main = () => {
+  const options = { ...DEFAULTS };
+  createPaths();
+
   const propCount = Math.round(
     faker.random.number({
       min: options.propCountMin,
@@ -240,7 +137,7 @@ const main = () => {
       contents.code,
     );
   });
-  const fixtureContents = templates.Fixtures({ props: propsSample });
+  const fixtureContents = templates.fixtures({ props: propsSample });
   fs.writeFileSync(
     path.join(fixturesPath, "data.tsx"),
     prettier.format(fixtureContents, {

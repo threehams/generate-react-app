@@ -1,14 +1,6 @@
 import faker from "faker";
 import { concat, map, flatMap } from "lodash";
-
-export type PropType = "text" | "url" | "image" | "date" | "email";
-
-export interface Prop {
-  name: string;
-  func: Function;
-  type: PropType;
-  category: string;
-}
+import { Prop, PropType } from "../types";
 
 /* prettier-ignore */
 export const fakeProps: Prop[] = [
