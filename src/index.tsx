@@ -72,17 +72,13 @@ const createSceneStructure: SceneStructure = ({ propsSample, names }) => {
       max: Math.max(names.length, components.length),
     });
     const [children] = sample(components, numChildren);
-    const [propSample] = sample(
+    const [props] = sample(
       propsSample,
       faker.random.number({
         min: 2,
         max: propsSample.length - 2,
       }),
     );
-    const props = propSample.reduce((result, prop) => {
-      result[prop.name] = prop.type;
-      return result;
-    }, {});
     const importPath = index === names.length - 1 ? "../components/" : "./";
 
     components.push({
@@ -91,7 +87,6 @@ const createSceneStructure: SceneStructure = ({ propsSample, names }) => {
       props,
       children,
       importPath,
-      // state,
     });
     return components;
   }, []);

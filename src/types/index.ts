@@ -1,19 +1,23 @@
-export type PropType = "text" | "url" | "image" | "date" | "email";
+export type PropType =
+  | "text"
+  | "url"
+  | "image"
+  | "date"
+  | "email"
+  | "boolean"
+  | "case";
 
 export interface Prop {
   name: string;
   func: Function;
   type: PropType;
-  category: string;
+  category: string | null;
 }
-
-export type Props = { [key: string]: PropType };
 
 export interface Template {
   name: string;
   template: string;
-  props: Props;
+  props: Prop[];
   children: Template[];
   importPath: string;
-  // state: Props;
 }

@@ -2,6 +2,10 @@ import faker from "faker";
 import { concat, map, flatMap } from "lodash";
 import { Prop, PropType } from "../types";
 
+const tabs = ["main", "details", "options"];
+const options = ["city", "state", "nation"];
+const switches = ["navigation", "settings", "about"];
+
 /* prettier-ignore */
 export const fakeProps: Prop[] = [
   { name: "zipCode", func: faker.address.zipCode, type: "text", category: "address" },
@@ -80,6 +84,16 @@ export const fakeProps: Prop[] = [
   { name: "bitcoinAddress", func: faker.finance.bitcoinAddress, type: "text", category: "finance" },
   { name: "iban", func: faker.finance.iban, type: "text", category: "finance" },
   { name: "bic", func: faker.finance.bic, type: "text", category: "finance" },
+];
+
+/* prettier-ignore */
+export const fakeState: Prop[] = [
+  { name: "active", func: faker.random.boolean, type: "boolean", category: null },
+  { name: "enabled", func: faker.random.boolean, type: "boolean", category: null },
+  { name: "on", func: faker.random.boolean, type: "boolean", category: null },
+  { name: "tab", func: () => faker.random.arrayElement(tabs), type: "case", category: null },
+  { name: "option", func: () => faker.random.arrayElement(options), type: "case", category: null },
+  { name: "switch", func: () => faker.random.arrayElement(switches), type: "case", category: null },
 ];
 
 const componentPrefixes = [
