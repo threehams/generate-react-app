@@ -25,14 +25,13 @@ export const stateless = ({
   name,
   props: ownProps,
   children,
-  importPath,
 }: Template) => {
   const mergedProps = children.reduce(mergeChildProps, ownProps);
   const imports = children.map(childImport(importPath));
   const propTypes = mergedProps.map(propInterface);
   const childComponents = concat(
-    children.map(createChild),
     ownProps.map(createPartials(propChildren)),
+    children.map(createChild),
   );
   const propKeys = mergedProps.map(prop => prop.name);
   return template({

@@ -11,7 +11,7 @@ export const branch = (name: string, a: string, b: string) => {
 export const guard = (name: string, a: string) => `{${name} && ${a}}`;
 export const toggle = (name: string) => {
   return `
-    <button onClick={() => this.setState({ name: !this.state.name })}>
+    <button onClick={() => this.setState({ ${name}: !${name} })}>
       Toggle ${name}
     </button>
   `;

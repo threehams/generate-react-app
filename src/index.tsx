@@ -41,6 +41,8 @@ const DEFAULTS = {
   reuse: 50, // % chance of reusing components between scenes
   propCountMax: 20, // max total prop count per scene
   propCountMin: 5, // min total prop count per scene
+  stateCountMax: 1, // max total state count per component
+  stateCountMin: 0, // min total state count per component
   // renaming: 0, // % chance of renaming props within a component
   // seed: null, // number seed for predictable results
   // snapshots: 25, // % of tests using Jest snapshots
@@ -75,18 +77,16 @@ const createSceneStructure: SceneStructure = ({ propsSample, names }) => {
     const [props] = sample(
       propsSample,
       faker.random.number({
-        min: 2,
-        max: propsSample.length - 2,
+        min: 1,
+        max: propsSample.length,
       }),
     );
-    const importPath = index === names.length - 1 ? "../components/" : "./";
 
     components.push({
       name,
       template: "stateless",
       props,
       children,
-      importPath,
     });
     return components;
   }, []);
@@ -98,7 +98,7 @@ const createPaths = () => {
   mkdirp.sync(fixturesPath);
 };
 
-const main = () => {
+export const main = () => {
   const options = { ...DEFAULTS };
   createPaths();
 

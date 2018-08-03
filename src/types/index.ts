@@ -19,5 +19,5 @@ export interface Template {
   template: string;
   props: Prop[];
   children: Template[];
-  importPath: string;
+  path: string;
 }
