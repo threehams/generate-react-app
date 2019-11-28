@@ -5,8 +5,6 @@ This will generate a working app of any size, filled with as many junk component
 
 Possible future features include:
 
-- Flow support
-- support for untyped projects (what are you thinking?)
 - runtime errors injected in random places
 - chaotic indirection, random prop renaming
 - plugin system for templates
